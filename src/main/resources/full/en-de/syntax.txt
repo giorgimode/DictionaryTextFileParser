@@ -1,0 +1,35 @@
+to	for verbs
+[Br.]	British English
+[Am.]	American English
+
+[Aus.]	Australian English
+[NZ]	New Zealand English
+[Can.]	Canadian English
+[Scot.]	Scottish English
+[Irish]	Irish English
+[Ind.]	Indian English
+[S.Afr.]	South African English
+
+{pl}	to stress plural (nouns)
+{sg}	to stress singular (nouns)
+[attr.]	only before nouns
+[postpos.]	only after nouns
+[pred.]	only after verbs of being/becoming
+
+[coll.]	colloquial
+[fig.]	figurative
+[also fig.]	also figurative
+[hum.]	humorous
+[pej.]	pejorative
+[vulg.]	vulgar
+[dated]	dated
+[archaic]	archaic
+[obs.]	obsolete
+[literary]	literary
+[spv.]	spelling variant (less common)
+[sl.]	slang
+
+sb.	somebody
+sb.'s	somebody's
+sth.	something
+sb./sth.	somebody/something
