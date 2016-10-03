@@ -1,3 +1,5 @@
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,7 +20,7 @@ public class FileConverter {
     private static final String PATH = ".\\src\\main\\resources\\";
     private static final String PATH_FULL = PATH + "full\\";
     private static final String PATH_SPLIT = PATH + "split\\";
-
+    private static PrintWriter out2;
     public static void main(String[] args) throws IOException {
 
 
@@ -32,10 +34,14 @@ public class FileConverter {
         while ((currentLine = reader.readLine()) != null) {
             if (!currentLine.isEmpty() && currentLine.charAt(0) != '#') {
                 rawEntryPair = currentLine.split("\t", 2);
-                String rawKey = rawEntryPair[0];
-                String value = rawEntryPair[1];
-                String cleanKey = sanitize(rawKey, locale);
-                store(cleanKey, rawKey, value);
+                if (rawEntryPair.length > 1) {
+                    String rawKey = rawEntryPair[0];
+                    String value = rawEntryPair[1];
+                    String cleanKey = sanitize(rawKey, locale);
+                    if (StringUtils.isNotBlank(rawKey) && StringUtils.isNotBlank(value) && StringUtils.isNotBlank(cleanKey)) {
+                        store(cleanKey, rawKey, value);
+                    }
+                }
             }
         }
     }
@@ -58,7 +64,7 @@ public class FileConverter {
             }
         }
         String cleanKey = rawKey.replaceAll("\\{.*?\\} ?", "").replaceAll("\\[.*?\\] ?", "").replaceAll("\\(.*?\\) ?", "");
-        return cleanKey;
+        return cleanKey.trim();
     }
 
     private static void store(String cleanKey, String rawKey, String value) {
@@ -120,12 +126,15 @@ public class FileConverter {
         for (Map.Entry<String, Map<String, String>> entrySet: dictionaryMap.entrySet()) {
 
             if (Character.toLowerCase(entrySet.getKey().charAt(0)) != folderName) {
+                // TODO entrySet.getKey().charAt(0) might be weird character
                 folderName = Character.toLowerCase(entrySet.getKey().charAt(0));
              //   Path file = Paths.get(PATH_SPLIT + locale + folderName + ".txt");
                 file = new File(PATH_SPLIT + locale + "\\" + folderName + ".txt");
                 if (file.createNewFile()) {
                     System.out.println("CREATED FILE: " + locale);
-                  //  if (bufferWritter != null) bufferWritter.close();
+                    if (out2 != null) out2.close();
+                    out2 = new PrintWriter(new BufferedWriter(new FileWriter(PATH_SPLIT + locale + "\\" + folderName + ".txt", true)));
+                    //  if (bufferWritter != null) bufferWritter.close();
                   //  fileWritter = new FileWriter(file.getName(),true);
                   //  bufferWritter = new BufferedWriter(fileWritter);
                  //   out = new PrintWriter(bufferWritter);
@@ -140,7 +149,7 @@ public class FileConverter {
 
             Map<String, String> rawEntrySet = entrySet.getValue();
             rawEntrySet.entrySet().forEach(raw-> {
-                stringBuilder.append(raw.getKey() + "-->" + raw.getValue());
+                stringBuilder.append(raw.getKey() + "-->" + raw.getValue()).append(" && ");
             /*    if (rawEntrySet.size() > 1) {
                     stringBuilder.append("\\");
                 }*/
@@ -149,9 +158,8 @@ public class FileConverter {
 
             //bufferWritter.write(stringBuilder.toString());
             //out.println(stringBuilder.toString());
-            PrintWriter out2 = new PrintWriter(new BufferedWriter(new FileWriter(PATH_SPLIT + locale + "\\" + folderName + ".txt", true)));
             out2.println(stringBuilder.toString());
-            out2.close();
+
         }
     }
 
