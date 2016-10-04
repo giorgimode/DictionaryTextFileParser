@@ -21,9 +21,8 @@ public class FileConverter {
     private static final String PATH_FULL = PATH + "full\\";
     private static final String PATH_SPLIT = PATH + "split\\";
     private static PrintWriter out2;
+
     public static void main(String[] args) throws IOException {
-
-
         parseDirectory();
     }
 
@@ -63,8 +62,19 @@ public class FileConverter {
                 rawKey = rawKey.replace(key, "");
             }
         }
-        String cleanKey = rawKey.replaceAll("\\{.*?\\} ?", "").replaceAll("\\[.*?\\] ?", "").replaceAll("\\(.*?\\) ?", "");
-        return cleanKey.trim();
+        String cleanKey = rawKey.replaceAll("\\{.*?\\} ?", "")
+                                .replaceAll("\\[.*?\\] ?", "")
+                                .replaceAll("<.*?> ?", "")
+                                .replaceAll("\\(.*?\\) ?", "");
+        cleanKey = cleanKey.replaceAll("[(?U)[\\P{Alpha}]&&[^-'&_ ]]", "");
+        int i = 0;
+        while (i < cleanKey.length() && !Character.toString(cleanKey.charAt(i)).matches("(?U)[\\p{Alpha}]")) {
+            i++;
+        }
+        cleanKey = cleanKey.substring(i);
+
+
+        return cleanKey.trim().toLowerCase();
     }
 
     private static void store(String cleanKey, String rawKey, String value) {
@@ -75,8 +85,7 @@ public class FileConverter {
                     counter++;
                 }
                 String key = rawKey + counter;
-                System.out.println("cleanKey: " + key);
-            //    System.out.println("cleanKey: " + cleanKey + ", rawkey: " + (key));
+                System.out.println("cleanKey: " + cleanKey + ", rawkey: " + (key));
                 dictionaryMap.get(cleanKey).put(key, value);
             } else {
                 dictionaryMap.get(cleanKey).put(rawKey, value);
@@ -126,18 +135,12 @@ public class FileConverter {
         for (Map.Entry<String, Map<String, String>> entrySet: dictionaryMap.entrySet()) {
 
             if (Character.toLowerCase(entrySet.getKey().charAt(0)) != folderName) {
-                // TODO entrySet.getKey().charAt(0) might be weird character
                 folderName = Character.toLowerCase(entrySet.getKey().charAt(0));
-             //   Path file = Paths.get(PATH_SPLIT + locale + folderName + ".txt");
                 file = new File(PATH_SPLIT + locale + "\\" + folderName + ".txt");
                 if (file.createNewFile()) {
-                    System.out.println("CREATED FILE: " + locale);
+                    System.out.println("CREATED FILE: " + folderName);
                     if (out2 != null) out2.close();
                     out2 = new PrintWriter(new BufferedWriter(new FileWriter(PATH_SPLIT + locale + "\\" + folderName + ".txt", true)));
-                    //  if (bufferWritter != null) bufferWritter.close();
-                  //  fileWritter = new FileWriter(file.getName(),true);
-                  //  bufferWritter = new BufferedWriter(fileWritter);
-                 //   out = new PrintWriter(bufferWritter);
                 }
                 else
                 {
@@ -150,14 +153,9 @@ public class FileConverter {
             Map<String, String> rawEntrySet = entrySet.getValue();
             rawEntrySet.entrySet().forEach(raw-> {
                 stringBuilder.append(raw.getKey() + "-->" + raw.getValue()).append(" && ");
-            /*    if (rawEntrySet.size() > 1) {
-                    stringBuilder.append("\\");
-                }*/
             });
 
 
-            //bufferWritter.write(stringBuilder.toString());
-            //out.println(stringBuilder.toString());
             out2.println(stringBuilder.toString());
 
         }
