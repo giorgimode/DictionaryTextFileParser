@@ -16,18 +16,19 @@ import java.util.TreeMap;
  * Created by modeg on 10/1/2016.
  */
 public class FileConverter {
-    private static Map<String, Map<String, String>> dictionaryMap = new TreeMap<>();
-    private static final String PATH = ".\\src\\main\\resources\\";
-    private static final String PATH_FULL = PATH + "full\\";
-    private static final String PATH_SPLIT = PATH + "split\\";
-    private static PrintWriter out2;
+    protected Map<String, Map<String, String>> dictionaryMap = new TreeMap<>();
+    private static final String                           PATH          = ".\\src\\main\\resources\\";
+    private static final String                           PATH_FULL     = PATH + "full\\";
+    private static final String                           PATH_SPLIT    = PATH + "split\\";
+    private static PrintWriter printWriter;
 
     public static void main(String[] args) throws IOException {
-        parseDirectory();
+        FileConverter fileConverter = new FileConverter();
+        fileConverter.parseDirectory();
     }
 
-    private static void parse(String locale) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(PATH_FULL + locale + "\\"+ locale + ".txt"));
+    private void parse(String locale) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(PATH_FULL + locale + "\\" + locale + ".txt"));
         String currentLine = null;
         String[] rawEntryPair = null;
         while ((currentLine = reader.readLine()) != null) {
@@ -45,21 +46,18 @@ public class FileConverter {
         }
     }
 
-    private static String sanitize(String rawKey, String locale) throws IOException {
-        // String rawKey = "to be [Br.] [zoo] or [zoo] {boboba} not {boboba} to (hooter) {bobobaz} be";
-        BufferedReader reader = new BufferedReader(new FileReader(PATH_FULL + locale + "\\" + "syntax.txt"));
-        String currentLine = null;
-        List<String> keys = new ArrayList<>();
-        while ((currentLine = reader.readLine()) != null) {
-            if (!currentLine.isEmpty()) {
-                keys.add(currentLine.split("\t", 2)[0]);
-            }
-        }
-
-        //   String cleanKey = null;
-        for (String key : keys) {
+    /*
+    *     removes syntax words only if separate ('to' will not be removed from 'total')
+    *     removes everything inside bracket family
+    *     cleans all non alphabetic symbols except a few special ones allowed
+    *     even allowed symbols are removed if they are in the beginning of the key string
+    */
+    protected String sanitize(String rawKey, String locale) throws IOException {
+        List<String> syntaxWords = getSyntaxWords(locale);
+        for (String key : syntaxWords) {
             if (rawKey.contains(key)) {
-                rawKey = rawKey.replace(key, "");
+                String regex = "(?U)[\\P{Alpha}]" + key + "(?U)[\\P{Alpha}]";
+                rawKey = rawKey.replaceAll(regex, " ");
             }
         }
         String cleanKey = rawKey.replaceAll("\\{.*?\\} ?", "")
@@ -77,7 +75,19 @@ public class FileConverter {
         return cleanKey.trim().toLowerCase();
     }
 
-    private static void store(String cleanKey, String rawKey, String value) {
+    protected List<String> getSyntaxWords(String locale) throws IOException {
+        List<String> syntaxWords = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new FileReader(PATH_FULL + locale + "\\" + "syntax.txt"));
+        String currentLine = null;
+        while ((currentLine = reader.readLine()) != null) {
+            if (!currentLine.isEmpty()) {
+                syntaxWords.add(currentLine.split("\t", 2)[0]);
+            }
+        }
+        return syntaxWords;
+    }
+
+    protected void store(String cleanKey, String rawKey, String value) {
         if (dictionaryMap.containsKey(cleanKey)) {
             if (dictionaryMap.get(cleanKey).containsKey(rawKey)) {
                 int counter = 1;
@@ -98,7 +108,7 @@ public class FileConverter {
     }
 
 
-    private static void parseDirectory() throws IOException {
+    private void parseDirectory() throws IOException {
         File folder = new File(PATH_FULL);
         File[] listOfFolders = folder.listFiles();
         for (int i = 0; i < listOfFolders.length; i++) {
@@ -112,38 +122,26 @@ public class FileConverter {
         }
     }
 
-    private static void createSubFiles(String locale) throws IOException {
+    private void createSubFiles(String locale) throws IOException {
         File dir = new File(PATH_SPLIT + locale);
         if (dir.mkdir()) {
             System.out.println("CREATED DIRECTORY: " + locale);
-        }
-        else
-        {
+        } else {
             throw new IOException("DIRECTORY EXISTS");
         }
         char folderName = '~';
-/*        dictionaryMap.entrySet().forEach(entrySet -> {
-            folderName = entrySet.getKey().charAt(0);
-     //   File file = new File(PATH_SPLIT + locale + folderName + "txt");
-            Path file = Paths.get(PATH_SPLIT + locale + folderName + "txt");
-            Files.write(file, lines, Charset.forName("UTF-8"));
-        });*/
         File file = null;
-        FileWriter fileWritter = null;
-        BufferedWriter bufferWritter = null;
-        PrintWriter out = null;
-        for (Map.Entry<String, Map<String, String>> entrySet: dictionaryMap.entrySet()) {
-
+        for (Map.Entry<String, Map<String, String>> entrySet : dictionaryMap.entrySet()) {
             if (Character.toLowerCase(entrySet.getKey().charAt(0)) != folderName) {
                 folderName = Character.toLowerCase(entrySet.getKey().charAt(0));
                 file = new File(PATH_SPLIT + locale + "\\" + folderName + ".txt");
                 if (file.createNewFile()) {
                     System.out.println("CREATED FILE: " + folderName);
-                    if (out2 != null) out2.close();
-                    out2 = new PrintWriter(new BufferedWriter(new FileWriter(PATH_SPLIT + locale + "\\" + folderName + ".txt", true)));
-                }
-                else
-                {
+                    if (printWriter != null) {
+                        printWriter.close();
+                    }
+                    printWriter = new PrintWriter(new BufferedWriter(new FileWriter(PATH_SPLIT + locale + "\\" + folderName + ".txt", true)));
+                } else {
                     throw new IOException("FILE EXISTS");
                 }
             }
@@ -151,12 +149,10 @@ public class FileConverter {
             stringBuilder.append(entrySet.getKey() + "=");
 
             Map<String, String> rawEntrySet = entrySet.getValue();
-            rawEntrySet.entrySet().forEach(raw-> {
-                stringBuilder.append(raw.getKey() + "-->" + raw.getValue()).append(" && ");
-            });
+            rawEntrySet.entrySet().forEach(raw -> stringBuilder.append(raw.getKey() + "-->" + raw.getValue()).append(" && "));
 
 
-            out2.println(stringBuilder.toString());
+            printWriter.println(stringBuilder.toString());
 
         }
     }
