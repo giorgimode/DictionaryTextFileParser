@@ -1,8 +1,10 @@
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -18,9 +20,10 @@ public class FileConverterTest {
 
     @Test
     public void sanitizeTest() throws Exception {
-        List<String> syntaxWords = Arrays.asList("[Br.]", "[Aus.]", "sb.'s", "to");
+        List<String> syntaxWords = Arrays.asList("[Br.]", "[Aus.]", "sb.'s", "to", "{pl}");
         FileConverter fileConverter = spy(FileConverter.class);
         doReturn(syntaxWords).when(fileConverter).getSyntaxWords(any());
+
         String cleanKey = fileConverter.sanitize("bigtotality to magificent", "en-de");
         assertEquals("bigtotality magificent", cleanKey);
 
@@ -47,6 +50,31 @@ public class FileConverterTest {
 
         cleanKey = fileConverter.sanitize("[Br.] - 'kill a-mockingbird (Lee)", "en-de");
         assertEquals("kill a-mockingbird", cleanKey);
+
+        cleanKey = fileConverter.sanitize("[Br.] - 'kill {pl} a-mockingbird (Lee)", "en-de");
+        assertEquals("kill a-mockingbird", cleanKey);
+
+        cleanKey = fileConverter.sanitize("aspirations {pl}", "en-de");
+        assertEquals("aspirations", cleanKey);
+
+
+
+    }
+
+    @Test
+    public void sanitizeForeignTest() throws Exception {
+        List<String> syntaxWords = Arrays.asList("[მრ.]", "[აშ.]", "ბრ.'ლ", "და", "{ვა}");
+        FileConverter fileConverter = spy(FileConverter.class);
+        doReturn(syntaxWords).when(fileConverter).getSyntaxWords(any());
+
+        String cleanKey = fileConverter.sanitize("ნახეს უცხო მოყმე [მრ.] ვინმე", "en-de");
+        assertEquals("ნახეს უცხო მოყმე ვინმე", cleanKey);
+
+        cleanKey = fileConverter.sanitize("ნახეს უცხო-მოყმე [მრ.] ვინმე", "en-de");
+        assertEquals("ნახეს უცხო-მოყმე ვინმე", cleanKey);
+
+        cleanKey = fileConverter.sanitize("და - ნახეს უცხო-მოყმე [მრ.] ვინმე", "en-de");
+        assertEquals("ნახეს უცხო-მოყმე ვინმე", cleanKey);
     }
 
     @Test
@@ -68,28 +96,24 @@ public class FileConverterTest {
         assertTrue(fileConverter.dictionaryMap.get("key").size() == 3);
     }
 
+    // TODO unless syntax word is the only word
+
     @Ignore
     @Test
-    public void parseTest() {
-/*        String[] test = {"JeanMarieLeBlanc", "Żółć", "Ὀδυσσεύς", "原田雅彦", "კოლოფი"};
-        for (String str : test) {
-            System.out.print(str.matches("^(?U)[\\p{Alpha}]+") + " ");
-        }
-        System.out.println("\n");
-        String[] test2 = {"j", "Ż", "ύ", "原", "კ"};
-        for (String str : test2) {
-            System.out.print(str.matches("(?U)[\\p{Alpha}]") + " ");
-        }*/
+    public void parseTest() throws IOException {
+        FileConverter fileConverter = new FileConverter();
+        fileConverter.setPath(FileConverter.ModeType.TEST.getValue());
+        fileConverter.parseDirectory();
+    }
 
-        String cleanKey = "that / which / who <GIORGI>";
-        cleanKey = cleanKey.replaceAll("<.*?> ?", "");
-        assertFalse(cleanKey.contains("<GIORGI>"));
-        int i = 0;
-        while (i < cleanKey.length() && !Character.toString(cleanKey.charAt(i)).matches("(?U)[\\p{Alpha}]")) {
-            i++;
-        }
-
-        assertFalse(cleanKey.contains("/"));
-
+    @Ignore
+    @Test
+    public void parseTest2() throws IOException {
+        String string = Pattern.quote("{test}");
+        String txt = "testing {test} something";
+        String regex = "(?U)[\\P{Alpha}]"+ string + "(?U)[\\P{Alpha}]";
+        txt =  txt.replaceAll(regex, " ");
+        System.out.println(regex);
+        System.out.println(txt);
     }
 }
