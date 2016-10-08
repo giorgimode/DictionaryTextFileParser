@@ -1,9 +1,12 @@
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
@@ -24,40 +27,40 @@ public class FileConverterTest {
         doReturn(syntaxWords).when(fileConverter).getSyntaxWords(any());
 
         String cleanKey = fileConverter.sanitize("bigtotality to magificent", "en-de");
-        assertEquals("bigtotality magificent", cleanKey);
+        assertEquals("bigtotality\\ magificent", cleanKey);
 
         cleanKey = fileConverter.sanitize("bigtotality to magificent", "en-de");
-        assertEquals("bigtotality magificent", cleanKey);
+        assertEquals("bigtotality\\ magificent", cleanKey);
 
         cleanKey = fileConverter.sanitize("bite sb.'s ass", "en-de");
-        assertEquals("bite ass", cleanKey);
+        assertEquals("bite\\ ass", cleanKey);
 
         cleanKey = fileConverter.sanitize("[Br.] bad with Jesse Pinkman", "en-de");
-        assertEquals("bad with jesse pinkman", cleanKey);
+        assertEquals("bad\\ with\\ jesse\\ pinkman", cleanKey);
 
         cleanKey = fileConverter.sanitize("kill a mockingbird, {Lee}", "en-de");
-        assertEquals("kill a mockingbird", cleanKey);
+        assertEquals("kill\\ a\\ mockingbird", cleanKey);
 
         cleanKey = fileConverter.sanitize("kill a mocking_bird .[Lee]", "en-de");
-        assertEquals("kill a mocking_bird", cleanKey);
+        assertEquals("kill\\ a\\ mocking_bird", cleanKey);
 
         cleanKey = fileConverter.sanitize("kill & m'ockingbird <Lee>", "en-de");
-        assertEquals("kill & m'ockingbird", cleanKey);
+        assertEquals("kill\\ &\\ m'ockingbird", cleanKey);
 
         cleanKey = fileConverter.sanitize("kill a-mockingbird (Lee)", "en-de");
-        assertEquals("kill a-mockingbird", cleanKey);
+        assertEquals("kill\\ a-mockingbird", cleanKey);
 
         cleanKey = fileConverter.sanitize("[Br.] - 'kill a-mockingbird (Lee)", "en-de");
-        assertEquals("kill a-mockingbird", cleanKey);
+        assertEquals("kill\\ a-mockingbird", cleanKey);
 
         cleanKey = fileConverter.sanitize("[Br.] - 'kill {pl} a-mockingbird (Lee)", "en-de");
-        assertEquals("kill a-mockingbird", cleanKey);
+        assertEquals("kill\\ a-mockingbird", cleanKey);
 
         cleanKey = fileConverter.sanitize("aspirations {pl}", "en-de");
         assertEquals("aspirations", cleanKey);
 
         cleanKey = fileConverter.sanitize("[whole string - in brackets]", "en-de");
-        assertEquals("whole string - in brackets", cleanKey);
+        assertEquals("whole\\ string\\ -\\ in\\ brackets", cleanKey);
 
         cleanKey = fileConverter.sanitize("to", "en-de");
         assertEquals("to", cleanKey);
@@ -70,13 +73,13 @@ public class FileConverterTest {
         doReturn(syntaxWords).when(fileConverter).getSyntaxWords(any());
 
         String cleanKey = fileConverter.sanitize("ნახეს უცხო მოყმე [მრ.] ვინმე", "en-de");
-        assertEquals("ნახეს უცხო მოყმე ვინმე", cleanKey);
+        assertEquals("ნახეს\\ უცხო\\ მოყმე\\ ვინმე", cleanKey);
 
         cleanKey = fileConverter.sanitize("ნახეს უცხო-მოყმე [მრ.] ვინმე", "en-de");
-        assertEquals("ნახეს უცხო-მოყმე ვინმე", cleanKey);
+        assertEquals("ნახეს\\ უცხო-მოყმე\\ ვინმე", cleanKey);
 
         cleanKey = fileConverter.sanitize("და - ნახეს უცხო-მოყმე [მრ.] ვინმე", "en-de");
-        assertEquals("ნახეს უცხო-მოყმე ვინმე", cleanKey);
+        assertEquals("ნახეს\\ უცხო-მოყმე\\ ვინმე", cleanKey);
     }
 
     @Test
@@ -109,11 +112,27 @@ public class FileConverterTest {
     @Ignore
     @Test
     public void parseTest2() throws IOException {
+/*
         String string = Pattern.quote("{test}");
         String txt = "testing {test} something";
         String regex = "(?U)[\\P{Alpha}]"+ string + "(?U)[\\P{Alpha}]";
         txt =  txt.replaceAll(regex, " ");
         System.out.println(regex);
         System.out.println(txt);
+*/
+
+        Properties prop = new Properties();
+        prop.load(new FileReader(".\\src\\main\\resources\\split\\en-de\\s.properties"));
+        long start = System.currentTimeMillis();
+        System.out.println(prop.get("smooth a board"));
+        long end = System.currentTimeMillis();
+        long diff = end - start;
+
+        System.out.println("time: " + diff);
+        start = System.currentTimeMillis();
+        System.out.println(prop.get("stonemason"));
+        end = System.currentTimeMillis();
+        diff = end - start;
+        System.out.println("time: " + diff);
     }
 }

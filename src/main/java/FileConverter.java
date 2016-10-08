@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
-
 /**
  * Created by modeg on 10/1/2016.
  */
@@ -114,8 +113,9 @@ public class FileConverter {
         while (i < cleanKey.length() && !Character.toString(cleanKey.charAt(i)).matches("(?U)[\\p{Alpha}]")) {
             i++;
         }
-        cleanKey = cleanKey.substring(i);
-        return cleanKey.trim().toLowerCase();
+        cleanKey = cleanKey.substring(i).trim().toLowerCase();
+
+        return cleanKey.replace(" ", "\\ ");
     }
 
     protected List<String> getSyntaxWords(String locale) throws IOException {
@@ -162,13 +162,13 @@ public class FileConverter {
         for (Map.Entry<String, Map<String, String>> entrySet : dictionaryMap.entrySet()) {
             if (Character.toLowerCase(entrySet.getKey().charAt(0)) != folderName) {
                 folderName = Character.toLowerCase(entrySet.getKey().charAt(0));
-                file = new File(getSplitPath() + locale + "\\" + folderName + ".txt");
+                file = new File(getSplitPath() + locale + "\\" + folderName + ".properties");
                 if (file.createNewFile()) {
-                    System.out.println("CREATED FILE: " + getSplitPath() + locale + "\\" + folderName + ".txt");
+                    System.out.println("CREATED FILE: " + getSplitPath() + locale + "\\" + folderName + ".properties");
                     if (printWriter != null) {
                         printWriter.close();
                     }
-                    printWriter = new PrintWriter(new BufferedWriter(new FileWriter(getSplitPath() + locale + "\\" + folderName + ".txt", true)));
+                    printWriter = new PrintWriter(new BufferedWriter(new FileWriter(getSplitPath() + locale + "\\" + folderName + ".properties", true)));
                 } else {
                     throw new IOException("FILE EXISTS");
                 }
