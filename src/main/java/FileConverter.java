@@ -123,7 +123,7 @@ public class FileConverter {
         BufferedReader reader = new BufferedReader(new FileReader(getFullPath() + locale + "\\" + "syntax.txt"));
         String currentLine = null;
         while ((currentLine = reader.readLine()) != null) {
-            if (!currentLine.isEmpty()) {
+            if (StringUtils.isNotBlank(cleanNonAlpha(currentLine))) {
                 syntaxWords.add(currentLine.split("\t", 2)[0]);
             }
         }
