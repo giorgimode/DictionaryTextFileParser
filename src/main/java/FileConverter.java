@@ -91,19 +91,24 @@ public class FileConverter {
      */
     protected String sanitize(String rawKey, String locale) throws IOException {
         List<String> syntaxWords = getSyntaxWords(locale);
-        for (String key : syntaxWords) {
-            if (rawKey.contains(key)) {
-                String keyWithEscapedCharacters = Pattern.quote(key);
+        for (String currentSyntaxWord : syntaxWords) {
+            if (rawKey.contains(currentSyntaxWord)) {
+                String keyWithEscapedCharacters = Pattern.quote(currentSyntaxWord);
                 String regex = "(?U)[\\P{Alpha}]" + keyWithEscapedCharacters + "(?U)[\\P{Alpha}]";
                 rawKey = rawKey.replaceAll(regex, " ");
-                if (rawKey.startsWith(key + " ") || rawKey.endsWith(" " + key))
-                    rawKey = rawKey.replace(key, " ");
+                if (rawKey.startsWith(currentSyntaxWord + " ") || rawKey.endsWith(" " + currentSyntaxWord))
+                    rawKey = rawKey.replace(currentSyntaxWord, " ");
             }
         }
         String cleanKey = rawKey.replaceAll("\\{.*?\\} ?", "")
                                 .replaceAll("\\[.*?\\] ?", "")
                                 .replaceAll("<.*?> ?", "")
                                 .replaceAll("\\(.*?\\) ?", "");
+        // if the whole string is in brackets, then ignore above operation and not clean everything
+        if (StringUtils.isBlank(cleanKey))
+        {
+            cleanKey = rawKey;
+        }
         cleanKey = cleanNonAlpha(cleanKey);
         int i = 0;
         while (i < cleanKey.length() && !Character.toString(cleanKey.charAt(i)).matches("(?U)[\\p{Alpha}]")) {
@@ -172,7 +177,9 @@ public class FileConverter {
             stringBuilder.append(entrySet.getKey() + "=");
 
             Map<String, String> rawEntrySet = entrySet.getValue();
-            rawEntrySet.entrySet().forEach(raw -> stringBuilder.append(raw.getKey() + "-->" + raw.getValue()).append(" && "));
+            rawEntrySet.entrySet()
+                       .forEach(raw -> stringBuilder.append(raw.getKey() + "-->" + raw.getValue())
+                                                    .append(" && "));
 
             printWriter.println(stringBuilder.toString());
 

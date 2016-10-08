@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -57,8 +56,11 @@ public class FileConverterTest {
         cleanKey = fileConverter.sanitize("aspirations {pl}", "en-de");
         assertEquals("aspirations", cleanKey);
 
+        cleanKey = fileConverter.sanitize("[whole string - in brackets]", "en-de");
+        assertEquals("whole string - in brackets", cleanKey);
 
-
+        cleanKey = fileConverter.sanitize("to", "en-de");
+        assertEquals("to", cleanKey);
     }
 
     @Test
@@ -95,8 +97,6 @@ public class FileConverterTest {
         assertTrue(fileConverter.dictionaryMap.size() == 1);
         assertTrue(fileConverter.dictionaryMap.get("key").size() == 3);
     }
-
-    // TODO unless syntax word is the only word
 
     @Ignore
     @Test
