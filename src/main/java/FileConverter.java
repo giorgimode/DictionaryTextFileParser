@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
+
 /**
  * Created by modeg on 10/1/2016.
  */
@@ -38,7 +39,7 @@ public class FileConverter {
             this.value = value;
         }
 
-        public String getValue(){
+        public String getValue() {
             return this.value;
         }
     }
@@ -95,8 +96,9 @@ public class FileConverter {
                 String keyWithEscapedCharacters = Pattern.quote(currentSyntaxWord);
                 String regex = "(?U)[\\P{Alpha}]" + keyWithEscapedCharacters + "(?U)[\\P{Alpha}]";
                 rawKey = rawKey.replaceAll(regex, " ");
-                if (rawKey.startsWith(currentSyntaxWord + " ") || rawKey.endsWith(" " + currentSyntaxWord))
+                if (rawKey.startsWith(currentSyntaxWord + " ") || rawKey.endsWith(" " + currentSyntaxWord)) {
                     rawKey = rawKey.replace(currentSyntaxWord, " ");
+                }
             }
         }
         String cleanKey = rawKey.replaceAll("\\{.*?\\} ?", "")
@@ -104,8 +106,7 @@ public class FileConverter {
                                 .replaceAll("<.*?> ?", "")
                                 .replaceAll("\\(.*?\\) ?", "");
         // if the whole string is in brackets, then ignore above operation and not clean everything
-        if (StringUtils.isBlank(cleanKey))
-        {
+        if (StringUtils.isBlank(cleanKey)) {
             cleanKey = rawKey;
         }
         cleanKey = cleanNonAlpha(cleanKey);
@@ -120,7 +121,7 @@ public class FileConverter {
 
     protected List<String> getSyntaxWords(String locale) throws IOException {
         List<String> syntaxWords = new ArrayList<>();
-        BufferedReader reader = new BufferedReader(new FileReader(getFullPath() + locale + "\\" + "syntax.txt"));
+        BufferedReader reader = new BufferedReader(new FileReader(getFullPath() + locale + "\\" + ConverterConstants.SYNTAX_FILE_NAME));
         String currentLine = null;
         while ((currentLine = reader.readLine()) != null) {
             if (StringUtils.isNotBlank(cleanNonAlpha(currentLine))) {
@@ -135,10 +136,12 @@ public class FileConverter {
         if (dictionaryMap.containsKey(cleanKey)) {
             if (dictionaryMap.get(cleanKey).containsKey(rawKey)) {
                 int counter = 1;
-                while (dictionaryMap.get(cleanKey).containsKey(rawKey + counter)) {
+                String sCounter = "~" + counter + "~";
+                while (dictionaryMap.get(cleanKey).containsKey(rawKey + sCounter)) {
                     counter++;
+                    sCounter = "~" + counter + "~";
                 }
-                String key = rawKey + counter;
+                String key = rawKey + sCounter;
                 dictionaryMap.get(cleanKey).put(key, value);
             } else {
                 dictionaryMap.get(cleanKey).put(rawKey, value);
@@ -162,13 +165,14 @@ public class FileConverter {
         for (Map.Entry<String, Map<String, String>> entrySet : dictionaryMap.entrySet()) {
             if (Character.toLowerCase(entrySet.getKey().charAt(0)) != folderName) {
                 folderName = Character.toLowerCase(entrySet.getKey().charAt(0));
-                file = new File(getSplitPath() + locale + "\\" + folderName + ".properties");
+                file = new File(getSplitPath() + locale + "\\" + folderName + ConverterConstants.FILE_FORMAT_PROPERTY);
                 if (file.createNewFile()) {
-                    System.out.println("CREATED FILE: " + getSplitPath() + locale + "\\" + folderName + ".properties");
+                    System.out.println("CREATED FILE: " + getSplitPath() + locale + "\\" + folderName + ConverterConstants.FILE_FORMAT_PROPERTY);
                     if (printWriter != null) {
                         printWriter.close();
                     }
-                    printWriter = new PrintWriter(new BufferedWriter(new FileWriter(getSplitPath() + locale + "\\" + folderName + ".properties", true)));
+                    printWriter = new PrintWriter(new BufferedWriter(new FileWriter(
+                            getSplitPath() + locale + "\\" + folderName + ConverterConstants.FILE_FORMAT_PROPERTY, true)));
                 } else {
                     throw new IOException("FILE EXISTS");
                 }
@@ -178,11 +182,11 @@ public class FileConverter {
 
             Map<String, String> rawEntrySet = entrySet.getValue();
             rawEntrySet.entrySet()
-                       .forEach(raw -> stringBuilder.append(raw.getKey() + "-->" + raw.getValue())
-                                                    .append(" && "));
+                       .forEach(raw -> stringBuilder.append(raw.getKey() + ConverterConstants.KEY_VALUE_SPLIT + raw.getValue())
+                                                    .append(ConverterConstants.DEFINITION_SPLIT));
 
-            printWriter.println(stringBuilder.toString());
-
+            String output = stringBuilder.toString();
+            printWriter.println(output.substring(0, output.length() - ConverterConstants.DEFINITION_SPLIT.length()));
         }
     }
 
@@ -199,7 +203,7 @@ public class FileConverter {
         char[] chars = name.toCharArray();
 
         for (char c : chars) {
-            if(!Character.isLetter(c) && !allowedCharacters.contains(c)) {
+            if (!Character.isLetter(c) && !allowedCharacters.contains(c)) {
                 name = name.replace(Character.toString(c), "");
             }
         }
