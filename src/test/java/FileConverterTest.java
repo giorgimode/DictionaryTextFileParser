@@ -135,4 +135,18 @@ public class FileConverterTest {
         diff = end - start;
         System.out.println("time: " + diff);
     }
+
+    @Test
+    public void testSyntaxFormatter() {
+        String in = "überweisend [bes. Arzt]\tadj pres-p ";
+
+        FileConverter fileConverter = new FileConverter();
+        String outcome = fileConverter.wordTypeSyntaxFormatter(in);
+        assertEquals("(adj.)(pres-p.) überweisend [bes. Arzt]", outcome);
+/*        System.out.println(fileConverter.wordTypeSyntaxFormatter("überweisend [bes. Arzt]\tpres-p "));
+        System.out.println(fileConverter.wordTypeSyntaxFormatter("fdfsadfsafsdafsa"));
+        System.out.println(fileConverter.wordTypeSyntaxFormatter(null));
+        System.out.println(fileConverter.wordTypeSyntaxFormatter(""));
+        System.out.println(fileConverter.wordTypeSyntaxFormatter(""));*/
+    }
 }

@@ -1,3 +1,4 @@
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Created by modeg on 10/1/2016.
@@ -106,7 +109,7 @@ public class FileConverter {
                                 .replaceAll("<.*?> ?", "")
                                 .replaceAll("\\(.*?\\) ?", "");
         // if the whole string is in brackets, then ignore above operation and not clean everything
-        if (StringUtils.isBlank(cleanKey)) {
+        if (isBlank(cleanKey)) {
             cleanKey = rawKey;
         }
         cleanKey = cleanNonAlpha(cleanKey);
@@ -182,12 +185,35 @@ public class FileConverter {
 
             Map<String, String> rawEntrySet = entrySet.getValue();
             rawEntrySet.entrySet()
-                       .forEach(raw -> stringBuilder.append(raw.getKey() + ConverterConstants.KEY_VALUE_SPLIT + raw.getValue())
-                                                    .append(ConverterConstants.DEFINITION_SPLIT));
+                       .forEach(raw -> stringBuilder
+                               .append(raw.getKey() + ConverterConstants.KEY_VALUE_SPLIT + wordTypeSyntaxFormatter(raw.getValue()))
+                               .append(ConverterConstants.DEFINITION_SPLIT));
 
             String output = stringBuilder.toString();
             printWriter.println(output.substring(0, output.length() - ConverterConstants.DEFINITION_SPLIT.length()));
         }
+    }
+
+    protected String wordTypeSyntaxFormatter(String translation) {
+        if (isBlank(translation)) {
+            return translation;
+        }
+        String[] words = translation.split("\\t");
+        if (words.length > 1) {
+            String syntaxWordString = words[words.length - 1];
+            String syntaxWords[] = syntaxWordString.split("\\s+");
+            String syntaxFormatted = "";
+            for (int i = 0; i < syntaxWords.length; i++) {
+                if (syntaxWordMap.containsKey(syntaxWords[i])) {
+                    syntaxFormatted += syntaxWordMap.get(syntaxWords[i]);
+                    translation = translation.replace(syntaxWords[i], "");
+                    if (i == syntaxWords.length - 1) {
+                        translation = syntaxFormatted + " " + translation;
+                    }
+                }
+            }
+        }
+        return translation.trim();
     }
 
     public String getPath() {
@@ -210,4 +236,19 @@ public class FileConverter {
 
         return name;
     }
+
+    ImmutableMap<String, String> syntaxWordMap = new ImmutableMap.Builder<String, String>()
+            .put("adj", "(adj.)")
+            .put("adv", "(adv.)")
+            .put("past-p", "(past-p.)")
+            .put("verb", "(verb)")
+            .put("pres-p", "(pres-p.)")
+            .put("prep", "(prep.)")
+            .put("conj", "(conj.)")
+            .put("pron", "(pron.)")
+            .put("prefix", "(prefix)")
+            .put("suffix", "(suffix)")
+            .put("noun", "(noun)")
+            .build();
+
 }
